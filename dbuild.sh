@@ -31,10 +31,22 @@ clean (){
 }
 
 build (){
+    sourceList=""
 	echo
 	echo "|-- Building Binary: $binaryName ---"
 	echo "|"
-	g++ src/main.cpp -o "build/bin/$binaryName"
+    echo "|*Building*|"
+    for sfile in `ls src`; do
+        if [ -d src/$sfile ]; then
+            echo "| IGNORE $sfile :: Is a directory"
+        fi
+        
+        if [ ${sfile: -2} == ".c" ]; then
+            echo "| COMPILE $sfile"
+            sourceList="$sourceList src/$sfile "
+        fi
+    done
+	gcc $sourceList -o "build/bin/$binaryName"
 	echo "^-- Build Complete ---"
 }
 
@@ -48,10 +60,26 @@ run (){
 	echo "^-- Run Complete ---"
 }
 
-auto (){
+debug (){
+    echo
+	echo "|-- Running Binary: $binaryName ---"
+	echo
+	gdb -q build/bin/$binaryName
+	wait
+	echo
+	echo "^-- Run Complete ---"
+}
+
+autodbg (){
 	clean
 	build
-	run
+	debug
+}
+
+auto (){
+    clean
+    build
+    run
 }
 
 case $dTask in
@@ -61,8 +89,12 @@ case $dTask in
 	;;
 	"run") run
 	;;
+    "debug") debug
+    ;;
 	"auto") auto
 	;;
+    "autodbg") autodbg
+    ;;
 	*) echo "Unknown Task: $dTask"
 	;;
 esac
