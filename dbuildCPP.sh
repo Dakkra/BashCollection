@@ -55,7 +55,7 @@ build (){
     sourceDirectory src/
     echo "| Creating binary..."
     #Build all sources
-	gcc $sourceList -o "build/bin/$binaryName"
+	g++ $sourceList -o "build/bin/$binaryName"
     echo "| Binary \"$binaryName\" created"
 	echo "^-- Build Complete ---"
 }
@@ -84,7 +84,7 @@ debug (){
 sourceDirectory (){
     echo "| Scaning Directory: $1"
     for sfile in `ls $1`; do
-        if [ ${sfile: -2} == ".c" ]; then
+        if [ ${sfile: -4} == ".cpp" ]; then
             sourceList="$sourceList $1$sfile"
             echo "| COMPILE: $1$sfile"
             else
