@@ -60,18 +60,37 @@ build (){
 	echo "^-- Build Complete ---"
 }
 
+unitTest (){
+    echo
+    echo "|-- Running Unit Tests ---"
+    echo "|"
+    for test in `ls src/ | grep ".test"`; do
+            echo "|-$test--"
+            testDirectory src/ $test
+            echo "| Asessing test..."
+            g++ $sourceList -o "build/test/$test"
+            testResponse=`build/test/$test`
+            echo "| RESULT:: $testResponse"
+            sourceList=""
+            echo "|"
+    done
+    rm -rf build/test/*
+    echo "^-- Tests Complete ---"
+}
+
 run (){
-	echo
+    echo
 	echo "|-- Running Binary: $binaryName ---"
-	echo
+	echo "|"
 	build/bin/$binaryName
 	wait
+    echo "|" 
 	echo "^-- Run Complete ---"
 }
 
 debug (){
     echo
-	echo "|-- Running Binary: $binaryName ---"
+	echo "|-- Debugging Binary: $binaryName ---"
 	echo
     #Run the binary in GDB
 	gdb -q build/bin/$binaryName
@@ -80,7 +99,7 @@ debug (){
 	echo "^-- Run Complete ---"
 }
 
-#Scan each file. if it's a .c file, add it to course list. Id it's a directory, inform the user 
+#Scan each file. if it's a .cpp file, add it to course list. Id it's a directory, inform the user 
 sourceDirectory (){
     echo "| Scaning Directory: $1"
     for sfile in `ls $1`; do
@@ -89,7 +108,11 @@ sourceDirectory (){
             echo "| COMPILE: $1$sfile"
             else
             if [[ -d $1/$sfile ]]; then
-                sourceDirectory $1$sfile/
+                if [ ${sfile: -5} == ".test" ]; then
+                    echo "| IGNORE: $sfile"
+                    else
+                    sourceDirectory $1$sfile/
+                fi
                 else
                 echo "| IGNORE: $1$sfile"
             fi
@@ -97,14 +120,43 @@ sourceDirectory (){
     done
 }
 
+#Scan files for testing.
+testDirectory (){
+    echo "| TEST:: Scaning Directory: $1"
+    for sfile in `ls $1`; do
+        if [ ${sfile: -4} == ".cpp" ]; then
+                if [ ${sfile} == "Launcher.cpp" ]; then 
+                    echo "| TEST:: IGNORE Launcher.cpp"
+                    else
+                    sourceList="$sourceList $1$sfile"
+                    echo "| TEST:: COMPILE: $1$sfile"
+                fi
+                else
+                if [[ -d $1/$sfile ]]; then
+                    if [ ${sfile: -5} == ".test" ]; then
+                        if [ $sfile == $2 ]; then
+                            testDirectory $1$sfile/
+                        fi
+                        else
+                        testDirectory $1$sfile/
+                    fi
+                    else
+                    echo "| TEST:: IGNORE: $1$sfile"
+                fi
+        fi
+    done
+}
+
 autodbg (){
 	clean
+    unitTest
 	build
 	debug
 }
 
 auto (){
     clean
+    unitTest
     build
     run
 }
@@ -115,6 +167,8 @@ case $dTask in
 	;;
 	"build") build
 	;;
+    "test") unitTest
+    ;;
 	"run") run
 	;;
     "debug") debug
